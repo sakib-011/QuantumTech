@@ -194,14 +194,14 @@ export const HomePage: React.FC = () => {
 
             {/* Visual Column */}
             <div className="lg:col-span-5 relative w-full">
-              <div className="relative rounded-2xl overflow-hidden border border-border bg-ink shadow-float group">
+              <div className="relative rounded-2xl overflow-hidden border border-border bg-slate-900 dark:bg-[#181818] shadow-float group">
                 <img
                   src={settings.heroBannerImage || heroBannerImg}
                   alt={settings.storeName || "QuantumTech premium tech accessories showcase"}
                   className="w-full h-auto object-cover group-hover:scale-102 transition-transform duration-500 ease-brand"
                   loading="eager"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent flex flex-col justify-end p-5 sm:p-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent dark:from-[#121212]/95 dark:via-[#121212]/40 flex flex-col justify-end p-5 sm:p-6">
                   <span className="caption-3 px-2.5 py-1 rounded bg-quantum text-white inline-block w-fit mb-1 font-semibold">
                     {language === 'bn'
                       ? (settings.heroBannerBadgeBn || settings.heroBannerBadge || '১০০% জেনুইন টেক')
@@ -308,40 +308,64 @@ export const HomePage: React.FC = () => {
       {/* 5. PROMOTIONAL BANNER SECTION */}
       <section data-testid="promotional-banner" className="py-10 bg-surface-alt border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative rounded-2xl bg-ink text-white overflow-hidden p-8 sm:p-12 border border-slate-800 shadow-float">
-            <div className="max-w-xl flex flex-col items-start gap-4 z-10 relative">
-              <span className="caption-3 px-3 py-1 rounded-full bg-quantum text-white font-semibold uppercase tracking-wider">
-                {middleCampaign?.badgeText || 'Deal of the Week'}
-              </span>
+          <div className="relative rounded-2xl bg-slate-900 dark:bg-[#181818] text-white overflow-hidden p-6 sm:p-10 lg:p-12 border border-slate-800 shadow-float">
+            {/* Ambient Background Glow */}
+            <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-gradient-to-l from-quantum/25 via-quantum/10 to-transparent pointer-events-none hidden sm:block" />
 
-              <h2 className="heading-4 sm:heading-2 font-bold leading-tight">
-                {middleCampaign ? (language === 'bn' && middleCampaign.nameBn ? middleCampaign.nameBn : middleCampaign.name) : 'GaN 65W Multi-Port Desktop Fast Charger'}
-              </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-10 relative">
+              {/* Left Column: Offer Details */}
+              <div className="lg:col-span-7 flex flex-col items-start gap-4">
+                <span className="caption-3 px-3 py-1 rounded-full bg-quantum text-white font-semibold uppercase tracking-wider shadow-sm">
+                  {middleCampaign?.badgeText || 'Deal of the Week'}
+                </span>
 
-              <p className="body-3 text-slate-300">
-                {middleCampaign ? (language === 'bn' && middleCampaign.descriptionBn ? middleCampaign.descriptionBn : middleCampaign.description) : 'Power your MacBook, iPad, and smartphone at the same time with advanced Gallium Nitride heat dissipation. Save 15% this week only.'}
-              </p>
+                <h2 className="heading-4 sm:heading-2 font-bold leading-tight">
+                  {middleCampaign ? (language === 'bn' && middleCampaign.nameBn ? middleCampaign.nameBn : middleCampaign.name) : 'GaN 65W Multi-Port Desktop Fast Charger'}
+                </h2>
 
-              <div className="flex items-center gap-4 mt-2">
-                <Link
-                  to={middleCampaign?.landingPageSlug ? `/campaign/${middleCampaign.landingPageSlug}` : (middleCampaign?.customCtaLink || '/product/gan-65w-multi-port-desktop-fast-charger')}
-                  className="btn-base bg-quantum text-white hover:bg-quantum-hover button-md shadow-sm h-11 px-6 font-semibold"
-                >
-                  <FontAwesomeIcon icon={Icons.cart} className="h-4 w-4 mr-1.5" />
-                  <span>{middleCampaign?.customCtaText || 'Shop Deal • ৳2,750'}</span>
-                </Link>
+                <p className="body-3 text-slate-300 max-w-xl leading-relaxed">
+                  {middleCampaign ? (language === 'bn' && middleCampaign.descriptionBn ? middleCampaign.descriptionBn : middleCampaign.description) : 'Power your MacBook, iPad, and smartphone at the same time with advanced Gallium Nitride heat dissipation. Save 15% this week only.'}
+                </p>
 
-                <Link
-                  to="/shop"
-                  className="btn-base bg-slate-800 text-slate-200 hover:bg-slate-700 button-sm h-11 px-4 font-semibold"
-                >
-                  <span>Explore Catalog</span>
-                </Link>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2">
+                  <Link
+                    to={middleCampaign?.landingPageSlug ? `/campaign/${middleCampaign.landingPageSlug}` : (middleCampaign?.customCtaLink || '/product/gan-65w-multi-port-desktop-fast-charger')}
+                    className="btn-base bg-quantum text-white hover:bg-quantum-hover button-md shadow-sm h-11 px-6 font-semibold"
+                  >
+                    <FontAwesomeIcon icon={Icons.cart} className="h-4 w-4 mr-1.5" />
+                    <span>{middleCampaign?.customCtaText || 'Shop Deal • ৳2,750'}</span>
+                  </Link>
+
+                  <Link
+                    to="/shop"
+                    className="btn-base bg-slate-800 text-slate-200 hover:bg-slate-700 button-sm h-11 px-4 font-semibold border border-slate-700"
+                  >
+                    <span>Explore Catalog</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right Column: Featured Charger Product Visual */}
+              <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                <div className="relative w-full max-w-sm sm:max-w-md aspect-[4/3] rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-950 shadow-2xl group">
+                  <img
+                    src={middleCampaign?.campaignImage || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80'}
+                    alt={middleCampaign?.name || 'GaN 65W Multi-Port Desktop Fast Charger'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-brand"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end p-4">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="caption-3 px-2.5 py-1 rounded-lg bg-quantum text-white font-semibold shadow-sm">
+                        {language === 'bn' ? '১৫% ছাড়' : 'Save 15%'}
+                      </span>
+                      <span className="caption-3 px-2.5 py-1 rounded-lg bg-slate-900/90 text-amber-300 font-mono font-bold border border-slate-700/80 shadow-xs">
+                        ৳2,750
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Subtle background glow effect */}
-            <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-gradient-to-l from-quantum/20 to-transparent pointer-events-none hidden sm:block" />
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 async function runAdminTests() {
   console.log('=== QuantumTech Complete Admin Dashboard Verification ===\n');
@@ -38,7 +39,7 @@ async function runAdminTests() {
 
   // Test Show/Hide password toggle
   console.log('Testing Show/Hide password button toggle...');
-  await page.type('#admin-password', 'admin123');
+  await page.type('#admin-password', ADMIN_PASSWORD);
   let pwdType = await page.$eval('#admin-password', el => el.getAttribute('type'));
   console.log(`Password type initially: ${pwdType}`);
 
@@ -56,7 +57,7 @@ async function runAdminTests() {
 
   // Fill valid credentials
   await page.type('#admin-email', 'admin@quantumtech.com');
-  console.log('Submitting valid credentials (admin@quantumtech.com / admin123)...');
+  console.log('Submitting configured administrator credentials...');
   await submitLoginBtn.click();
 
   await page.waitForFunction(() => window.location.pathname.includes('/admin/dashboard'), { timeout: 6000 });

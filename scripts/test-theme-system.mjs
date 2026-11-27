@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 async function testThemeSystem() {
   console.log('--- Testing Theme System Across Mobile & Desktop ---');
@@ -92,7 +93,7 @@ async function testThemeSystem() {
   await page.goto('http://localhost:3000/admin/dashboard', { waitUntil: 'networkidle0' });
   if (page.url().includes('login')) {
     await page.type('input[type="email"]', 'admin@quantumtech.com');
-    await page.type('input[type="password"]', 'admin123');
+    await page.type('input[type="password"]', ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
   }

@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -154,7 +155,7 @@ async function run() {
 
     // Log in as Admin to test admin portal bilingual support
     await page.type('input[type="email"]', 'admin@quantumtech.com');
-    await page.type('input[type="password"]', 'admin123');
+    await page.type('input[type="password"]', ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
 

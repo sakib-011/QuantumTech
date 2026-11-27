@@ -29,7 +29,7 @@ export const AdminLoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -49,17 +49,19 @@ export const AdminLoginPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const res = login(email, password, rememberMe);
-      setIsSubmitting(false);
-
+    try {
+      const res = await login(email, password, rememberMe);
       if (!res.success) {
         setError(res.error || 'Authentication failed. Please verify your credentials.');
       } else {
         const from = (location.state as any)?.from?.pathname || '/admin/dashboard';
         navigate(from, { replace: true });
       }
-    }, 250);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Authentication failed unexpectedly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -172,7 +174,7 @@ export const AdminLoginPage: React.FC = () => {
                     setPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  placeholder="Enter passcode (e.g. admin123)"
+                  placeholder="Enter your administrator password"
                   autoComplete="current-password"
                   required
                   className="w-full rounded-xl border border-border px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-quantum focus:ring-2 focus:ring-quantum-soft pr-11"
@@ -200,7 +202,6 @@ export const AdminLoginPage: React.FC = () => {
                 <span>{t.admin.login.rememberMe}</span>
               </label>
 
-              <span className="caption-4 text-muted">Demo: admin123</span>
             </div>
 
             {/* Submit Button */}
@@ -223,18 +224,6 @@ export const AdminLoginPage: React.FC = () => {
             </button>
           </form>
         )}
-
-        {/* Demo Credentials Box */}
-        <div className="mt-6 p-3 rounded-xl bg-surface-alt border border-border text-xs text-slate-600 flex flex-col gap-1">
-          <span className="font-semibold text-ink flex items-center gap-1.5">
-            <FontAwesomeIcon icon={Icons.info} className="h-3.5 w-3.5 text-quantum" />
-            <span>Store Administrator Demo Access:</span>
-          </span>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-mono text-slate-500 mt-0.5">
-            <span>Email: <strong className="text-ink">admin@quantumtech.com</strong></span>
-            <span>Password: <strong className="text-quantum">admin123</strong></span>
-          </div>
-        </div>
 
         {/* Back Link */}
         <div className="mt-6 text-center border-t border-border pt-4">

@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -171,7 +172,7 @@ async function runJourneys() {
     // 2. Sign in using mock credentials
     console.log('[Step 2] Signing in with mock credentials...');
     await page.type('input[type="email"]', 'admin@quantumtech.com');
-    await page.type('input[type="password"]', 'admin123');
+    await page.type('input[type="password"]', ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForFunction(() => window.location.pathname.includes('/admin/dashboard'), { timeout: 8000 });
     console.log(`✓ Authenticated. Current page: ${await page.evaluate(() => window.location.href)}`);

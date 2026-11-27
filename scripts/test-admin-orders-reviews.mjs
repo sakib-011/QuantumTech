@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 async function runOrdersAndReviewsTests() {
   console.log('=== QuantumTech Admin Orders, Payment Verification & Reviews Test ===\n');
@@ -13,7 +14,7 @@ async function runOrdersAndReviewsTests() {
   // 1. Sign in to Admin
   console.log('[1] Logging in to Admin Portal...');
   await page.goto('http://localhost:3000/admin/login', { waitUntil: 'networkidle0' });
-  await page.type('#admin-password', 'admin123');
+  await page.type('#admin-password', ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForFunction(() => window.location.pathname.includes('/admin/dashboard'), { timeout: 6000 });
   console.log('✓ Successfully authenticated to dashboard');

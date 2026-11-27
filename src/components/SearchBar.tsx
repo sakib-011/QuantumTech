@@ -81,11 +81,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      <form
-        onSubmit={handleSubmit}
-        className="relative flex items-center w-full rounded-xl border border-border bg-surface shadow-sm focus-within:border-quantum focus-within:ring-2 focus-within:ring-quantum-soft transition-all"
-      >
-        <div className="flex h-11 w-11 items-center justify-center text-muted pl-1">
+      <form onSubmit={handleSubmit} className="relative flex items-center w-full">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none flex items-center justify-center z-10">
           <FontAwesomeIcon icon={Icons.search} className="h-4 w-4" />
         </div>
 
@@ -96,14 +93,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onFocus={() => setIsFocused(true)}
           placeholder={placeholder || t.header.searchPlaceholder}
           autoFocus={autoFocus}
-          className="h-11 w-full bg-transparent pr-10 text-sm text-ink placeholder:text-muted-light focus:outline-none"
+          className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-10 text-sm text-ink placeholder:text-muted-light focus:outline-none focus:border-quantum focus:ring-2 focus:ring-quantum-soft transition-all shadow-2xs"
         />
 
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="flex h-11 w-10 items-center justify-center text-muted hover:text-ink transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-muted hover:text-ink hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-10"
             aria-label="Clear search query"
           >
             <FontAwesomeIcon icon={Icons.close} className="h-3.5 w-3.5" />

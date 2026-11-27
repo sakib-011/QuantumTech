@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import path from 'path';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 const ARTIFACT_DIR = '/home/sakib/.gemini/antigravity/brain/88627019-6145-4bb3-88bf-5a4402648fd1';
 
@@ -18,7 +19,7 @@ async function run() {
     console.log('[1] Logging into admin...');
     await page.goto('http://localhost:3000/admin/login', { waitUntil: 'networkidle0' });
     await page.type('input[type="email"]', 'admin@quantumtech.com');
-    await page.type('input[type="password"]', 'admin123');
+    await page.type('input[type="password"]', ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
 

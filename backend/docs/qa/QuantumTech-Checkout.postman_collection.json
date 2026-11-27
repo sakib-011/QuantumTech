@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "QuantumTech - Checkout, Payment & Tracking",
+    "description": "Manual QA collection for the checkout/payment flow. Set collection variables baseUrl, productId (and variantId for variant products). Run '0. Admin login' first; requests save orderId/orderNumber automatically. Test case IDs refer to docs/qa/TEST_PLAN.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "adminEmail", "value": "YOUR_ADMIN_EMAIL" },
+    { "key": "adminPassword", "value": "YOUR_ADMIN_PASSWORD" },
+    { "key": "adminToken", "value": "" },
+    { "key": "productId", "value": "PRODUCT_ID" },
+    { "key": "variantId", "value": "" },
+    { "key": "phone", "value": "01712345678" },
+    { "key": "orderId", "value": "" },
+    { "key": "orderNumber", "value": "" },
+    { "key": "trxId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Admin login",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "pm.collectionVariables.set('adminToken', pm.response.json().token);"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": { "mode": "raw", "raw": "{\"email\":\"{{adminEmail}}\",\"password\":\"{{adminPassword}}\",\"rememberMe\":false}" }
+      }
+    },
+    {
+      "name": "1. Cart",
+      "item": [
+        {
+          "name": "TC-CART-01 Validate cart",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('has totals', () => { const b = pm.response.json(); pm.expect(b).to.have.property('total'); pm.expect(b.items).to.be.an('array'); });"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/cart/validate",
+            "body": { "mode": "raw", "raw": "{\"area\":\"Inside Dhaka\",\"items\":[{\"productId\":\"{{productId}}\",\"variantId\":null,\"quantity\":1}]}" }
+          }
+        },
+        {
+          "name": "TC-CART-04 Quantity above limit (expect 400)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/cart/validate",
+            "body": { "mode": "raw", "raw": "{\"items\":[{\"productId\":\"{{productId}}\",\"quantity\":11}]}" }
+          }
+        },
+        {
+          "name": "TC-PAY-10 Payment methods",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('COD, bKash, Nagad', () => pm.expect(pm.response.json().map(m => m.code)).to.eql(['COD','bKash','Nagad']));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/payments/methods" }
+        }
+      ]
+    },
+    {
+      "name": "2. COD flow",
+      "item": [
+        {
+          "name": "TC-COD-01 Place COD order",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('idempotencyKey', pm.variables.replaceIn('{{$guid}}'));"] } },
+            { "listen": "test", "script": { "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const b = pm.response.json();",
+              "pm.test('order number format', () => pm.expect(b.orderNumber).to.match(/^QT-\\d{6}-\\d{4}$/));",
+              "pm.test('no internal fields', () => pm.expect(b).to.not.have.property('idempotencyKey'));",
+              "pm.collectionVariables.set('orderId', b.id); pm.collectionVariables.set('orderNumber', b.orderNumber);"
+            ] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\n  \"customerName\": \"QA Tester\",\n  \"phone\": \"{{phone}}\",\n  \"area\": \"Inside Dhaka\",\n  \"address\": \"House 12, Road 5, Dhanmondi\",\n  \"paymentMethod\": \"COD\",\n  \"deliveryCharge\": 0,\n  \"couponDiscount\": 99999,\n  \"language\": \"en\",\n  \"items\": [{\"productId\": \"{{productId}}\", \"variantId\": null, \"quantity\": 1}]\n}" }
+          }
+        },
+        {
+          "name": "TC-STK-05 Same idempotency key returns same order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('same order', () => pm.expect(pm.response.json().orderNumber).to.eql(pm.collectionVariables.get('orderNumber')));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\"customerName\":\"QA Tester\",\"phone\":\"{{phone}}\",\"area\":\"Inside Dhaka\",\"address\":\"House 12, Road 5, Dhanmondi\",\"paymentMethod\":\"COD\",\"items\":[{\"productId\":\"{{productId}}\",\"quantity\":1}]}" }
+          }
+        },
+        {
+          "name": "TC-TRK-01 Track order",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/orders/track?orderNumber={{orderNumber}}&phone={{phone}}" }
+        },
+        {
+          "name": "TC-TRK-02 Track with wrong phone (expect 404)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/orders/track?orderNumber={{orderNumber}}&phone=01999999999" }
+        },
+        {
+          "name": "TC-COD-04 Admin confirm",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Confirmed\",\"note\":\"Called customer\"}" }
+          }
+        },
+        {
+          "name": "TC-COD-04 Admin ship",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Shipped\",\"note\":\"Handed to courier\"}" }
+          }
+        },
+        {
+          "name": "TC-COD-04 Admin deliver (payment Collected)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Collected', () => pm.expect(pm.response.json().paymentStatus).to.eql('Collected'));"] } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Delivered\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. bKash flow",
+      "item": [
+        {
+          "name": "TC-PAY-01 Place bKash order",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": [
+              "const id = Math.random().toString(36).slice(2, 12).toUpperCase().padEnd(10, 'X');",
+              "pm.collectionVariables.set('trxId', id);"
+            ] } },
+            { "listen": "test", "script": { "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const b = pm.response.json();",
+              "pm.test('Verification pending', () => pm.expect(b.paymentStatus).to.eql('Verification pending'));",
+              "pm.collectionVariables.set('orderId', b.id); pm.collectionVariables.set('orderNumber', b.orderNumber);"
+            ] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Idempotency-Key", "value": "{{$guid}}" }],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\"customerName\":\"QA Tester\",\"phone\":\"{{phone}}\",\"area\":\"Outside Dhaka\",\"address\":\"Agrabad, Chattogram\",\"paymentMethod\":\"bKash\",\"trxId\":\"{{trxId}}\",\"senderNumber\":\"{{phone}}\",\"items\":[{\"productId\":\"{{productId}}\",\"quantity\":1}]}" }
+          }
+        },
+        {
+          "name": "TC-PAY-08 Reuse TrxID (expect 409 TRXID_USED)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('409', () => pm.response.to.have.status(409));",
+            "pm.test('code', () => pm.expect(pm.response.json().code).to.eql('TRXID_USED'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\"customerName\":\"QA Tester\",\"phone\":\"{{phone}}\",\"area\":\"Inside Dhaka\",\"address\":\"House 12, Road 5\",\"paymentMethod\":\"Nagad\",\"trxId\":\"{{trxId}}\",\"senderNumber\":\"{{phone}}\",\"items\":[{\"productId\":\"{{productId}}\",\"quantity\":1}]}" }
+          }
+        },
+        {
+          "name": "TC-PAY-02 Confirm before verification (expect 409)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('409', () => pm.response.to.have.status(409));"] } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Confirmed\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-03 Admin marks payment Failed",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/payment",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Failed\",\"note\":\"TrxID not in statement\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-04 Customer resubmits TrxID",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('trxId', Math.random().toString(36).slice(2, 12).toUpperCase().padEnd(10, 'Y'));"] } },
+            { "listen": "test", "script": { "exec": ["pm.test('back to verification', () => pm.expect(pm.response.json().paymentStatus).to.eql('Verification pending'));"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/orders/{{orderNumber}}/payment",
+            "body": { "mode": "raw", "raw": "{\"phone\":\"{{phone}}\",\"trxId\":\"{{trxId}}\",\"senderNumber\":\"{{phone}}\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-05 Admin verifies payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/payment",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Verified\",\"note\":\"Matched statement\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-05 Admin confirms",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Confirmed\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-07 Cancel verified order (Refund pending)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Refund pending', () => pm.expect(pm.response.json().paymentStatus).to.eql('Refund pending'));"] } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Cancelled\",\"reason\":\"Customer request\"}" }
+          }
+        },
+        {
+          "name": "TC-PAY-07 Mark Refunded",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Refunded', () => pm.expect(pm.response.json().paymentStatus).to.eql('Refunded'));"] } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders/{{orderId}}/payment",
+            "body": { "mode": "raw", "raw": "{\"status\":\"Refunded\",\"note\":\"Sent back via bKash\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Negative / security",
+      "item": [
+        {
+          "name": "TC-VAL-03 Malformed JSON (expect 400)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{not json" }
+          }
+        },
+        {
+          "name": "TC-VAL-04 Coupon code (expect 400 COUPON_INVALID)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\"customerName\":\"QA Tester\",\"phone\":\"{{phone}}\",\"area\":\"Inside Dhaka\",\"address\":\"House 12, Road 5\",\"paymentMethod\":\"COD\",\"couponCode\":\"FREE\",\"items\":[{\"productId\":\"{{productId}}\",\"quantity\":1}]}" }
+          }
+        },
+        {
+          "name": "TC-SEC-01 Admin orders without token (expect 401)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/orders" }
+        },
+        {
+          "name": "Admin verification queue",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/orders?paymentStatus=Verification%20pending"
+          }
+        }
+      ]
+    }
+  ]
+}

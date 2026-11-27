@@ -288,12 +288,12 @@ QuantumTech strictly adheres to high-conversion modern e-commerce UX guidelines:
 
 ---
 
-## Default Admin Credentials
+## Admin authentication
 
-To access the Admin Portal (`/admin` or `/admin/login`):
-
-- **Email**: `admin@quantumtech.com`
-- **Password**: `admin123`
+Admin sign-in is validated by the backend. Configure `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and
+`JWT_SECRET` in the backend environment before starting the service; see
+[`backend/.env.example`](backend/.env.example). No demo administrator password is included.
+Set `ADMIN_PASSWORD` locally before running browser QA scripts in `scripts/`.
 
 ---
 

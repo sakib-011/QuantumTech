@@ -205,14 +205,14 @@ export const PromotionalPopupContainer: React.FC = () => {
   return (
     <div
       data-testid="promotional-popup"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/70 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-ink/70 backdrop-blur-xs animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-label={popup.heading}
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl border border-border/80 animate-scaleUp transition-all"
+        className="relative w-full max-w-[420px] sm:max-w-md max-h-[92vh] overflow-y-auto rounded-2xl overflow-hidden shadow-2xl border border-border/80 animate-scaleUp transition-all"
         style={bgStyle}
         onClick={(e) => e.stopPropagation()}
       >
@@ -221,10 +221,10 @@ export const PromotionalPopupContainer: React.FC = () => {
           type="button"
           data-testid="popup-close-btn"
           onClick={handleClose}
-          className="absolute top-3 right-3 z-30 h-8 w-8 rounded-full bg-ink/50 hover:bg-ink text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
+          className="absolute top-2.5 right-2.5 z-30 h-8 w-8 rounded-full bg-slate-900/75 hover:bg-slate-900 text-white flex items-center justify-center transition-all shadow-md focus:outline-none border border-white/20"
           aria-label="Close promotion popup"
         >
-          <FontAwesomeIcon icon={Icons.close} className="h-4 w-4" />
+          <FontAwesomeIcon icon={Icons.close} className="h-3.5 w-3.5" />
         </button>
 
         {/* 1. LAYOUT: IMAGE-ONLY */}
@@ -252,34 +252,34 @@ export const PromotionalPopupContainer: React.FC = () => {
         {/* 2. LAYOUT: IMAGE WITH HEADING & DESCRIPTION */}
         {popup.layoutType === 'image_text' && (
           <div className="flex flex-col">
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+            <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-slate-900">
               <img
                 src={popup.imageUrl}
                 alt={popup.heading}
                 className="w-full h-full object-cover"
               />
               {popup.badgeText && (
-                <div className="absolute top-3 left-3">
-                  <span className="caption-3 px-2.5 py-1 rounded bg-quantum text-white font-bold shadow-sm uppercase tracking-wider">
+                <div className="absolute top-2.5 left-2.5">
+                  <span className="caption-4 px-2 py-0.5 rounded bg-quantum text-white font-bold shadow-sm uppercase tracking-wider">
                     {popup.badgeText}
                   </span>
                 </div>
               )}
             </div>
-            <div className="p-6 flex flex-col gap-2.5" style={textStyle}>
+            <div className="p-4 sm:p-5 flex flex-col gap-2" style={textStyle}>
               {popup.subtitle && (
                 <span className="caption-4 font-bold uppercase tracking-wider text-quantum">
                   {popup.subtitle}
                 </span>
               )}
-              <h3 className="heading-4 font-bold leading-tight">{popup.heading}</h3>
-              <p className="body-4 opacity-90 leading-relaxed">{popup.description}</p>
-              <div className="flex flex-wrap items-center gap-3 pt-3 mt-1">
+              <h3 className="heading-4 sm:title-2 font-bold leading-tight">{popup.heading}</h3>
+              <p className="caption-2 sm:caption-1 opacity-90 leading-relaxed">{popup.description}</p>
+              <div className="flex flex-wrap items-center gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => handleCtaClick(popup.buttonLink)}
                   style={btnStyle}
-                  className="btn-base text-white button-md px-6 py-2.5 rounded-xl font-semibold shadow-sm hover:opacity-95"
+                  className="btn-base text-white button-sm px-5 py-2 rounded-xl font-semibold shadow-sm hover:opacity-95"
                 >
                   {popup.buttonText}
                 </button>
@@ -287,7 +287,7 @@ export const PromotionalPopupContainer: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleCtaClick(popup.secondaryButtonLink || '/shop')}
-                    className="btn-base bg-surface-alt border border-border text-slate-700 button-sm font-semibold hover:bg-slate-200"
+                    className="btn-base bg-surface-alt border border-border text-slate-700 button-xsm text-xs font-semibold hover:bg-slate-200 px-3 py-2 rounded-xl"
                   >
                     {popup.secondaryButtonText}
                   </button>
@@ -311,13 +311,13 @@ export const PromotionalPopupContainer: React.FC = () => {
                 className="w-full h-full object-cover"
               />
               {popup.badgeText && (
-                <span className="absolute top-3 left-3 caption-3 px-2 py-0.5 rounded bg-quantum text-white font-bold shadow-sm uppercase">
+                <span className="absolute top-2.5 left-2.5 caption-4 px-2 py-0.5 rounded bg-quantum text-white font-bold shadow-sm uppercase">
                   {popup.badgeText}
                 </span>
               )}
             </div>
             <div
-              className={`md:col-span-7 p-6 sm:p-7 flex flex-col justify-center gap-3 ${
+              className={`md:col-span-7 p-4 sm:p-5 flex flex-col justify-center gap-2.5 ${
                 popup.imagePosition === 'right' ? 'md:order-1' : 'md:order-2'
               }`}
               style={textStyle}
@@ -327,14 +327,14 @@ export const PromotionalPopupContainer: React.FC = () => {
                   {popup.subtitle}
                 </span>
               )}
-              <h3 className="heading-4 font-bold leading-tight">{popup.heading}</h3>
-              <p className="body-4 opacity-90 leading-relaxed">{popup.description}</p>
-              <div className="pt-2">
+              <h3 className="heading-4 sm:title-2 font-bold leading-tight">{popup.heading}</h3>
+              <p className="caption-2 sm:caption-1 opacity-90 leading-relaxed">{popup.description}</p>
+              <div className="pt-1.5">
                 <button
                   type="button"
                   onClick={() => handleCtaClick(popup.buttonLink)}
                   style={btnStyle}
-                  className="btn-base text-white button-md px-6 py-2.5 rounded-xl font-semibold shadow-sm hover:opacity-95 w-full sm:w-auto"
+                  className="btn-base text-white button-sm px-5 py-2 rounded-xl font-semibold shadow-sm hover:opacity-95 w-full sm:w-auto"
                 >
                   {popup.buttonText}
                 </button>
@@ -345,28 +345,28 @@ export const PromotionalPopupContainer: React.FC = () => {
 
         {/* 4. LAYOUT: FULL PROMOTIONAL OFFER */}
         {popup.layoutType === 'full_offer' && (
-          <div className="p-6 sm:p-8 flex flex-col items-center text-center gap-4" style={textStyle}>
+          <div className="p-4 sm:p-6 flex flex-col items-center text-center gap-2.5" style={textStyle}>
             {popup.badgeText && (
-              <span className="caption-3 px-3 py-1 rounded-full bg-quantum text-white font-bold uppercase tracking-wider shadow-sm">
+              <span className="caption-4 px-2.5 py-0.5 rounded-full bg-quantum text-white font-bold uppercase tracking-wider shadow-sm">
                 {popup.badgeText}
               </span>
             )}
-            <h3 className="heading-3 font-bold leading-tight max-w-md">{popup.heading}</h3>
+            <h3 className="heading-4 sm:heading-3 font-bold leading-tight max-w-sm">{popup.heading}</h3>
             {popup.subtitle && (
-              <p className="title-3 font-semibold text-quantum">{popup.subtitle}</p>
+              <p className="caption-1 font-semibold text-quantum">{popup.subtitle}</p>
             )}
             {popup.imageUrl && (
-              <div className="w-full max-w-sm aspect-video rounded-xl overflow-hidden border border-border shadow-xs my-1">
+              <div className="w-full max-w-xs h-28 sm:h-36 rounded-xl overflow-hidden border border-border shadow-xs my-0.5">
                 <img src={popup.imageUrl} alt={popup.heading} className="w-full h-full object-cover" />
               </div>
             )}
-            <p className="body-3 opacity-90 max-w-md leading-relaxed">{popup.description}</p>
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pt-2">
+            <p className="caption-2 sm:caption-1 opacity-90 max-w-sm leading-relaxed">{popup.description}</p>
+            <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto pt-1.5">
               <button
                 type="button"
                 onClick={() => handleCtaClick(popup.buttonLink)}
                 style={btnStyle}
-                className="btn-base text-white button-lg px-8 py-3 rounded-xl font-bold shadow-sm hover:opacity-95"
+                className="btn-base text-white button-sm sm:button-md px-6 py-2.5 rounded-xl font-bold shadow-sm hover:opacity-95"
               >
                 {popup.buttonText}
               </button>
@@ -376,34 +376,36 @@ export const PromotionalPopupContainer: React.FC = () => {
 
         {/* 5. LAYOUT: FESTIVAL-THEMED */}
         {popup.layoutType === 'festival' && (
-          <div className="relative overflow-hidden p-6 sm:p-8 flex flex-col gap-4 text-white bg-slate-900 border border-slate-700">
+          <div className="relative overflow-hidden p-4 sm:p-5 flex flex-col gap-2.5 text-white bg-slate-900 border border-slate-700">
             {/* Festive Glow Accent */}
-            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-quantum/30 blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-quantum/30 blur-2xl pointer-events-none" />
 
             <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={Icons.gift} className="h-5 w-5 text-amber-400" />
-              <span className="caption-3 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30 uppercase tracking-wider">
+              <FontAwesomeIcon icon={Icons.gift} className="h-4 w-4 text-amber-400" />
+              <span className="caption-4 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30 uppercase tracking-wider">
                 {popup.badgeText || 'FESTIVAL SPECIAL'}
               </span>
             </div>
 
-            <div className="flex flex-col gap-1.5 z-10">
-              <h3 className="heading-3 font-bold text-white leading-tight">{popup.heading}</h3>
-              {popup.subtitle && <p className="title-3 text-quantum-soft font-semibold">{popup.subtitle}</p>}
+            <div className="flex flex-col gap-0.5 z-10">
+              <h3 className="title-2 sm:heading-4 font-bold text-white leading-tight">{popup.heading}</h3>
+              {popup.subtitle && <p className="caption-3 text-quantum-soft font-semibold">{popup.subtitle}</p>}
             </div>
 
-            <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-700 bg-slate-800 shadow-md">
-              <img src={popup.imageUrl} alt={popup.heading} className="w-full h-full object-cover" />
-            </div>
+            {popup.imageUrl && (
+              <div className="relative h-28 sm:h-36 rounded-xl overflow-hidden border border-slate-700 bg-slate-800 shadow-sm">
+                <img src={popup.imageUrl} alt={popup.heading} className="w-full h-full object-cover" />
+              </div>
+            )}
 
-            <p className="body-4 text-slate-300 leading-relaxed z-10">{popup.description}</p>
+            <p className="caption-3 sm:caption-2 text-slate-300 leading-normal z-10">{popup.description}</p>
 
             {/* Quick 1-click Promo Code Snippet */}
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={Icons.ticket} className="h-4 w-4 text-quantum" />
+                <FontAwesomeIcon icon={Icons.ticket} className="h-3.5 w-3.5 text-quantum" />
                 <span className="caption-4 text-slate-300 font-medium">Use Promo Code:</span>
-                <span className="title-4 font-mono font-bold text-amber-400">EID20</span>
+                <span className="caption-1 font-mono font-bold text-amber-400">EID20</span>
               </div>
               <button
                 type="button"
@@ -411,18 +413,18 @@ export const PromotionalPopupContainer: React.FC = () => {
                   navigator.clipboard.writeText('EID20');
                   showToast('Coupon code EID20 copied to clipboard!', 'success');
                 }}
-                className="btn-base bg-slate-700 hover:bg-slate-600 text-white button-xsm text-xs font-semibold px-2.5 py-1"
+                className="btn-base bg-slate-700 hover:bg-slate-600 text-white button-xsm text-xs font-semibold px-2 py-1 rounded-md"
               >
                 <FontAwesomeIcon icon={Icons.copy} className="h-3 w-3 mr-1" />
                 <span>Copy</span>
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 z-10">
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-1 z-10">
               <button
                 type="button"
                 onClick={() => handleCtaClick(popup.buttonLink)}
-                className="btn-base bg-quantum text-white hover:bg-quantum-hover button-md px-6 py-2.5 rounded-xl font-bold shadow-sm w-full sm:w-auto"
+                className="btn-base bg-quantum text-white hover:bg-quantum-hover button-sm px-5 py-2 rounded-xl font-bold shadow-sm w-full sm:w-auto"
               >
                 {popup.buttonText}
               </button>
@@ -430,7 +432,7 @@ export const PromotionalPopupContainer: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleCtaClick(popup.secondaryButtonLink || '/shop')}
-                  className="btn-base bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 button-sm font-semibold w-full sm:w-auto"
+                  className="btn-base bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 button-sm px-4 py-2 font-semibold w-full sm:w-auto"
                 >
                   {popup.secondaryButtonText}
                 </button>

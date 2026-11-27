@@ -50,14 +50,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const productName = language === 'bn' ? product.nameBn : product.name;
+    const formattedQuantity = quantity.toLocaleString(language === 'bn' ? 'bn-BD' : 'en-US');
     showToast(
       language === 'bn'
-        ? `"${productName}" কার্টে যোগ করা হয়েছে।`
-        : `"${productName}" added to your cart.`,
+        ? `"${productName}" কার্টে যোগ করা হয়েছে (${formattedQuantity} টি)।`
+        : `"${productName}" added to your cart (quantity: ${formattedQuantity}).`,
       'success',
       language === 'bn' ? 'কার্টে যোগ হয়েছে' : 'Added to Cart'
     );
-    setIsCartOpen(true);
     return true;
   };
 

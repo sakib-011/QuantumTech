@@ -204,7 +204,7 @@ export const PromotionalLandingPage: React.FC = () => {
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-ink flex flex-col items-center justify-center p-8 text-center">
+                  <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 flex flex-col items-center justify-center p-8 text-center">
                     <div className="h-16 w-16 rounded-2xl bg-quantum/20 border border-quantum/40 flex items-center justify-center mb-4 text-quantum">
                       <FontAwesomeIcon icon={Icons.shield} className="h-8 w-8 text-quantum" />
                     </div>
@@ -212,7 +212,7 @@ export const PromotionalLandingPage: React.FC = () => {
                     <p className="caption-2 text-slate-400">QuantumTech Verified Hardware Guarantee</p>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/40 to-transparent flex flex-col justify-end p-6 pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent dark:from-[#121212]/95 dark:via-[#121212]/40 flex flex-col justify-end p-6 pointer-events-none">
                   <span className="caption-3 px-2.5 py-1 rounded bg-amber-500 text-ink font-bold inline-flex items-center gap-1.5 w-fit mb-2 shadow-xs">
                     <FontAwesomeIcon icon={Icons.check} className="h-2.5 w-2.5" />
                     <span>Verified Campaign Offer</span>

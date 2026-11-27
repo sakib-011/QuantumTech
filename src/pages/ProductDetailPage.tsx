@@ -394,8 +394,11 @@ export const ProductDetailPage: React.FC = () => {
             onTouchEnd={handleTouchEnd}
           >
             <img
-              src={images[selectedImageIndex] || images[0]}
+              src={images[selectedImageIndex] || images[0] || 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80'}
               alt={`${productName} view ${selectedImageIndex + 1}`}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80';
+              }}
               className="h-full w-full object-cover rounded-xl transition-all duration-300"
             />
 
@@ -476,6 +479,9 @@ export const ProductDetailPage: React.FC = () => {
                   <img
                     src={img}
                     alt={`${productName} thumbnail ${idx + 1}`}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=400&q=80';
+                    }}
                     className="h-full w-full object-cover rounded-lg"
                   />
                 </button>

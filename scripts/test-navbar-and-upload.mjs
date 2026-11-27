@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ADMIN_PASSWORD } from './adminCredentials.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,7 +121,7 @@ async function run() {
     if (isLoginPage) {
       console.log('Logging in to admin dashboard...');
       await page.type('#admin-email', 'admin@quantumtech.com');
-      await page.type('#admin-password', 'admin123');
+      await page.type('#admin-password', ADMIN_PASSWORD);
       await page.click('button[type="submit"]');
       await page.waitForFunction(() => !window.location.pathname.includes('/admin/login'), { timeout: 6000 });
       await page.goto(`${BASE_URL}/admin/products/new`, { waitUntil: 'networkidle2' });

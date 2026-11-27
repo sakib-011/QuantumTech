@@ -707,13 +707,13 @@ export const AdminSettingsPage: React.FC = () => {
                   </div>
 
                   <div className="md:col-span-5">
-                    <div className="relative rounded-xl overflow-hidden border border-border bg-ink shadow-sm aspect-video">
+                    <div className="relative rounded-xl overflow-hidden border border-border bg-slate-900 dark:bg-[#181818] shadow-sm aspect-video">
                       <img
                         src={settings.heroBannerImage || heroBannerImg}
                         alt="Hero Preview"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent flex flex-col justify-end p-3">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent dark:from-[#121212]/95 dark:via-[#121212]/40 flex flex-col justify-end p-3">
                         <span className="caption-5 px-1.5 py-0.5 rounded bg-quantum text-white inline-block w-fit mb-0.5 font-semibold">
                           {settings.heroBannerBadge || '100% Genuine Tech'}
                         </span>
@@ -988,11 +988,11 @@ export const AdminSettingsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="caption-3 font-semibold text-ink block mb-1">Admin Demo Passcode</label>
+                <label className="caption-3 font-semibold text-ink block mb-1">Administrator credentials</label>
                 <input
                   type="text"
                   disabled
-                  value="admin123 (Active)"
+                  value="Managed by backend"
                   className="w-full rounded-xl border border-border p-2.5 text-xs text-slate-500 bg-slate-100 cursor-not-allowed font-mono"
                 />
               </div>

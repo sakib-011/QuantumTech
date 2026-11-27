@@ -14,6 +14,9 @@ interface ProductCardProps {
   className?: string;
 }
 
+export const FALLBACK_PRODUCT_IMAGE =
+  'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=600&q=80';
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) => {
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
@@ -23,7 +26,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const title = language === 'bn' ? product.nameBn : product.name;
   const categoryTitle = language === 'bn' ? product.categoryNameBn : product.categoryName;
-  const primaryImage = product.images[0] || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=400&q=80';
+  const primaryImage = product.images[0] || FALLBACK_PRODUCT_IMAGE;
+  const [imgSrc, setImgSrc] = React.useState(primaryImage);
+
+  React.useEffect(() => {
+    setImgSrc(product.images[0] || FALLBACK_PRODUCT_IMAGE);
+  }, [product.images]);
 
   // Dynamic promotional price calculation
   // Pick first in-stock variant if variants exist, otherwise default to first variant
@@ -55,9 +63,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
           aria-label={`View details for ${title}`}
         >
           <img
-            src={primaryImage}
+            src={imgSrc}
             alt={title}
             loading="lazy"
+            onError={() => {
+              if (imgSrc !== FALLBACK_PRODUCT_IMAGE) {
+                setImgSrc(FALLBACK_PRODUCT_IMAGE);
+              }
+            }}
             className="h-full w-full object-cover object-center transition-transform duration-500 ease-brand group-hover:scale-105"
           />
 

@@ -113,7 +113,7 @@ export const initialPopups: PromotionalPopup[] = [
     subtitle: 'Save ৳450 today with rapid nationwide shipping',
     description: 'Charges MacBook, iPhone, and Android devices at peak speeds with triple-port Gallium Nitride technology.',
     productId: 'prod-14',
-    imageUrl: 'https://images.unsplash.com/photo-1609592426815-54625b597c55?auto=format&fit=crop&w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
     badgeText: 'FLASH DEAL',
     buttonText: 'View Product Deal',
     buttonLink: '/product/gan-65w-multi-port-desktop-fast-charger',

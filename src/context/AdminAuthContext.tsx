@@ -5,7 +5,7 @@ import { authService } from '../services/authService';
 interface AdminAuthContextType {
   isAuthenticated: boolean;
   adminUser: AdminSession | null;
-  login: (emailOrPassword: string, password?: string, rememberMe?: boolean) => { success: boolean; error?: string };
+  login: (emailOrPassword: string, password?: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   failedAttempts: number;
   isLocked: boolean;
@@ -30,12 +30,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.removeEventListener('quantum_auth_updated', handleAuthChange);
   }, []);
 
-  const login = (
+  const login = async (
     emailOrPassword: string,
     passwordArg?: string,
     rememberMe: boolean = true
-  ): { success: boolean; error?: string } => {
-    const result = authService.login(emailOrPassword, passwordArg, rememberMe);
+  ): Promise<{ success: boolean; error?: string }> => {
+    const result = await authService.login(emailOrPassword, passwordArg, rememberMe);
     setAdminUser(authService.getSession());
     setLockout(authService.getLockoutState());
     setRememberedEmail(authService.getRememberedEmail());

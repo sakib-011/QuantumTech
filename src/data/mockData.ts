@@ -75,15 +75,14 @@ export const initialProducts: Product[] = [
     tags: ['charger', 'adapter', 'fast charging', 'type-c', '20w'],
     images: [
       'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1622445268048-8f83038b30f4?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1609592426815-54625b597c55?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
     ],
     variants: [
       { id: 'v1-1', productId: 'prod-01', attribute: 'colour', value: 'Pearl White', valueBn: 'মুক্তা সাদা', price: 1290, stock: 8, image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80' },
-      { id: 'v1-2', productId: 'prod-01', attribute: 'colour', value: 'Obsidian Black', valueBn: 'অবসিডিয়ান কালো', price: 1290, stock: 6, image: 'https://images.unsplash.com/photo-1622445268048-8f83038b30f4?auto=format&fit=crop&w=800&q=80' },
+      { id: 'v1-2', productId: 'prod-01', attribute: 'colour', value: 'Obsidian Black', valueBn: 'অবসিডিয়ান কালো', price: 1290, stock: 6, image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80' },
       { id: 'v1-3', productId: 'prod-01', attribute: 'colour', value: 'Cobalt Blue', valueBn: 'কোবাল্ট নীল', price: 1390, stock: 0, image: 'https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80' },
     ],
     specifications: {
@@ -166,7 +165,7 @@ export const initialProducts: Product[] = [
     status: 'Active',
     tags: ['powerbank', 'battery', 'portable charger', '22.5w', 'fast charging'],
     images: [
-      'https://images.unsplash.com/photo-1609592426815-54625b597c55?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
     ],
     variants: [
@@ -249,7 +248,6 @@ export const initialProducts: Product[] = [
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1622445268048-8f83038b30f4?auto=format&fit=crop&w=800&q=80',
     ],
     variants: [
       { id: 'v5-1', productId: 'prod-05', attribute: 'size', value: '1.0 Meter', valueBn: '১.০ মিটার', price: 390, stock: 12 },
@@ -323,7 +321,6 @@ export const initialProducts: Product[] = [
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1622445268048-8f83038b30f4?auto=format&fit=crop&w=800&q=80',
     ],
     variants: [
       { id: 'v5-1', productId: 'prod-05', attribute: 'size', value: '1.0 Meter', valueBn: '১.০ মিটার', price: 390, stock: 12 },
@@ -532,7 +529,7 @@ export const initialProducts: Product[] = [
     status: 'Active',
     tags: ['powerbank', 'magsafe', 'wireless', 'portable', 'fast charging'],
     images: [
-      'https://images.unsplash.com/photo-1609592426815-54625b597c55?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
     ],
     specifications: {
       'Capacity': '5,000 mAh (19.25Wh)',
@@ -567,7 +564,6 @@ export const initialProducts: Product[] = [
     tags: ['charger', 'gan', '65w', 'laptop charger', 'macbook', 'fast charging'],
     images: [
       'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1622445268048-8f83038b30f4?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
@@ -777,7 +773,7 @@ export const initialOrders: Order[] = [
         unitPrice: 1850,
         quantity: 1,
         lineTotal: 1850,
-        image: 'https://images.unsplash.com/photo-1609592426815-54625b597c55?auto=format&fit=crop&w=400&q=80',
+        image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=400&q=80',
       },
     ],
   },
