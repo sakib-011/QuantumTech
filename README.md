@@ -169,8 +169,8 @@ backend values belong in the ignored `backend/.env`.
 
 The root `vercel.json` configures the Vite frontend and the Spring Boot backend as Vercel
 Services. The backend uses Vercel's beta Container runtime and is built from
-[`backend/Dockerfile`](backend/Dockerfile). Requests under `/api/` are routed to Spring Boot;
-all other paths go to the frontend.
+[`backend/Dockerfile.vercel`](backend/Dockerfile.vercel). Requests under `/api/` are routed
+to Spring Boot; all other paths go to the frontend.
 
 1. Import the repository into Vercel and keep the project root set to the repository root.
 2. In Vercel project environment variables, remove any `VITE_API_URL` override. The frontend
