@@ -4,11 +4,8 @@ import com.quantumtech.backend.model.NotificationLog;
 import com.quantumtech.backend.model.Order;
 import com.quantumtech.backend.model.StoreSettings;
 import com.quantumtech.backend.repository.NotificationLogRepository;
+import com.quantumtech.backend.repository.OrderRepository;
 import com.quantumtech.backend.repository.SettingsRepository;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -19,14 +16,14 @@ public class NotificationService {
     private final MailService mailService;
     private final SettingsRepository settings;
     private final NotificationLogRepository logs;
-    private final MongoTemplate mongo;
+    private final OrderRepository orders;
 
     public NotificationService(MailService mailService, SettingsRepository settings,
-                               NotificationLogRepository logs, MongoTemplate mongo) {
+                               NotificationLogRepository logs, OrderRepository orders) {
         this.mailService = mailService;
         this.settings = settings;
         this.logs = logs;
-        this.mongo = mongo;
+        this.orders = orders;
     }
 
     @Async
@@ -59,10 +56,10 @@ public class NotificationService {
             }
         }
 
-        // Update only the notification field: saving the whole order here could overwrite an
-        // admin status/payment change made while the email was being sent.
-        mongo.updateFirst(Query.query(Criteria.where("_id").is(order.getId())),
-                new Update().set("notificationStatus", sent[0] ? "Sent" : "Failed"),
-                Order.class);
+        orders.findById(order.getId()).ifPresent(stored -> {
+            stored.setNotificationStatus(sent[0] ? "Sent" : "Failed");
+            stored.setUpdatedAt(Instant.now());
+            orders.save(stored);
+        });
     }
 }

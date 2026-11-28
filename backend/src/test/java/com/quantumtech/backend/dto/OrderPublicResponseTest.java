@@ -62,13 +62,18 @@ class OrderPublicResponseTest {
         assertNull(response.steps().get(3).at());
         assertFalse(response.paymentActionRequired());
 
-        String json = new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(response);
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String json = mapper.writeValueAsString(response);
         assertFalse(json.contains("secret-key"), json);
         assertFalse(json.contains("idempotencyKey"), json);
         assertFalse(json.contains("notificationStatus"), json);
         assertFalse(json.contains("rude"), "admin notes must not reach customers");
         assertFalse(json.contains("statement ref"), "admin notes must not reach customers");
         assertTrue(json.contains("\"orderNumber\":\"QT-261123-0001\""));
+        assertEquals(List.of("Pending", "Pending", "Confirmed", "Shipped"),
+                response.history().stream().map(OrderPublicResponse.HistoryEntry::toStatus).toList());
+        assertFalse(mapper.readTree(json).path("history").get(1).has("note"),
+                "admin notes must not reach customers");
     }
 
     @Test

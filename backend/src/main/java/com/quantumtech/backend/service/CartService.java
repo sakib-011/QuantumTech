@@ -28,10 +28,13 @@ public class CartService {
 
     private final ProductRepository products;
     private final SettingsRepository settings;
+    private final PromotionService promotions;
 
-    public CartService(ProductRepository products, SettingsRepository settings) {
+    public CartService(ProductRepository products, SettingsRepository settings,
+                       PromotionService promotions) {
         this.products = products;
         this.settings = settings;
+        this.promotions = promotions;
     }
 
     public CartQuote quote(List<CheckoutItemRequest> items, String area) {
@@ -106,7 +109,8 @@ public class CartService {
                     "Please choose an option for " + product.getName());
         }
 
-        int unitPrice = variant != null && variant.getPrice() > 0 ? variant.getPrice() : product.getPrice();
+        PromotionService.PriceResult price = promotions.calculateProductPrice(product, item.variantId());
+        int unitPrice = (int) Math.round(price.finalPrice());
         int available = Math.max(0, variant != null ? variant.getStock() : product.getStock());
         String image = variant != null && variant.getImage() != null ? variant.getImage() : firstImage;
 
@@ -118,23 +122,32 @@ public class CartService {
             return line(item, product, variant, image, unitPrice, available, CartLine.INSUFFICIENT_STOCK,
                     displayName(product, variant) + ": only " + available + " left in stock");
         }
-        return line(item, product, variant, image, unitPrice, available, CartLine.OK, null);
+        return line(item, product, variant, image, unitPrice, price, available, CartLine.OK, null);
     }
 
     private CartLine line(CheckoutItemRequest item, Product product, ProductVariant variant, String image,
                           int unitPrice, int available, String status, String message) {
-        Integer originalPrice = product.getOldPrice() != null && product.getOldPrice() > unitPrice
-                ? product.getOldPrice() : null;
-        return new CartLine(item.productId(), item.variantId(), product.getName(), product.getNameBn(),
+        PromotionService.PriceResult price = promotions.calculateProductPrice(product, item.variantId());
+        return line(item, product, variant, image, unitPrice, price, available, status, message);
+    }
+
+    private CartLine line(CheckoutItemRequest item, Product product, ProductVariant variant, String image,
+                          int unitPrice, PromotionService.PriceResult price, int available,
+                          String status, String message) {
+        int original = (int) Math.round(price.originalPrice());
+        int discount = Math.max(0, original - unitPrice);
+        Integer originalPrice = original > unitPrice ? original : null;
+        return new CartLine(item.productId(), product.getCategoryId(), item.variantId(), product.getName(), product.getNameBn(),
                 product.getSlug(), variant == null ? null : variant.getValue(), image, unitPrice,
-                originalPrice, item.quantity(), available, unitPrice * item.quantity(), status, message);
+                originalPrice, discount, price.discountId(), price.badgeText(), item.quantity(),
+                available, unitPrice * item.quantity(), status, message);
     }
 
     private CartLine unavailable(CheckoutItemRequest item, Product product, String message) {
-        return new CartLine(item.productId(), item.variantId(),
+        return new CartLine(item.productId(), product == null ? null : product.getCategoryId(), item.variantId(),
                 product == null ? null : product.getName(), product == null ? null : product.getNameBn(),
                 product == null ? null : product.getSlug(), null, null, 0, null,
-                item.quantity(), 0, 0, CartLine.UNAVAILABLE, message);
+                0, null, null, item.quantity(), 0, 0, CartLine.UNAVAILABLE, message);
     }
 
     private static String displayName(Product product, ProductVariant variant) {

@@ -3,6 +3,8 @@ package com.quantumtech.backend.service;
 import com.quantumtech.backend.config.OrderIndexInitializer;
 import com.quantumtech.backend.dto.CartLine;
 import com.quantumtech.backend.dto.CartQuote;
+import com.quantumtech.backend.dto.CampaignAnalyticsRequest;
+import com.quantumtech.backend.dto.CouponValidationRequest;
 import com.quantumtech.backend.dto.CreateOrderRequest;
 import com.quantumtech.backend.dto.OrderStatusRequest;
 import com.quantumtech.backend.dto.Phone;
@@ -44,12 +46,14 @@ public class OrderService {
     private final PaymentMethodCatalog paymentMethods;
     private final LookupRateLimiter lookupLimiter;
     private final NotificationService notificationService;
+    private final PromotionService promotions;
     private final MongoTemplate mongo;
 
     public OrderService(OrderRepository orders, ProductRepository products, CartService cart,
                         StockService stock, OrderNumberGenerator orderNumbers,
                         PaymentMethodCatalog paymentMethods, LookupRateLimiter lookupLimiter,
-                        NotificationService notificationService, MongoTemplate mongo) {
+                        NotificationService notificationService, MongoTemplate mongo,
+                        PromotionService promotions) {
         this.orders = orders;
         this.products = products;
         this.cart = cart;
@@ -59,6 +63,7 @@ public class OrderService {
         this.lookupLimiter = lookupLimiter;
         this.notificationService = notificationService;
         this.mongo = mongo;
+        this.promotions = promotions;
     }
 
     // ------------------------------------------------------------------ admin queries
@@ -97,6 +102,10 @@ public class OrderService {
     // ------------------------------------------------------------------ checkout
 
     public synchronized Order create(CreateOrderRequest request, String idempotencyKey) {
+        return create(request, idempotencyKey, null);
+    }
+
+    public synchronized Order create(CreateOrderRequest request, String idempotencyKey, String customerId) {
         String key = normalizeIdempotencyKey(idempotencyKey);
         if (key != null) {
             Optional<Order> existing = orders.findByIdempotencyKey(key);
@@ -111,10 +120,6 @@ public class OrderService {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     method + " payment is not available right now. Please choose another payment method.",
                     Map.of("code", "PAYMENT_METHOD_UNAVAILABLE"));
-        }
-        if (!isBlank(request.couponCode())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid or expired coupon code",
-                    Map.of("code", "COUPON_INVALID"));
         }
         String phone = Phone.normalize(request.phone());
         if (!Phone.isValid(phone)) {
@@ -138,19 +143,22 @@ public class OrderService {
             throw new ApiException(HttpStatus.CONFLICT, quote.issues().get(0),
                     Map.of("code", "CART_INVALID", "cart", quote));
         }
-        if (request.total() != null && request.total() != quote.total()) {
+        PromotionService.CouponValidationResult coupon = isBlank(request.couponCode())
+                ? null : validateCoupon(request.couponCode(), phone, quote);
+        int couponDiscount = coupon == null ? 0 : (int) Math.round(coupon.discountAmount());
+        int total = Math.max(0, quote.total() - couponDiscount);
+        if (request.total() != null && request.total() != total) {
             throw new ApiException(HttpStatus.CONFLICT,
-                    "Prices or delivery charge have changed. Please review your order total of "
-                            + quote.total() + " BDT.",
+                    "Prices or discounts have changed. Please review your order total of " + total + " BDT.",
                     Map.of("code", "PRICE_CHANGED", "cart", quote));
         }
 
         List<Reservation> reserved = reserveStock(quote);
+        Order saved;
         try {
-            Order order = buildOrder(request, quote, phone, trxId, senderNumber, key);
-            Order saved = insertWithOrderNumber(order);
-            notifyOwnerSafely(saved);
-            return saved;
+            Order order = buildOrder(request, quote, phone, trxId, senderNumber, key,
+                    coupon == null ? null : coupon.coupon().getCode(), couponDiscount, customerId);
+            saved = insertWithOrderNumber(order);
         } catch (DuplicateKeyException ex) {
             stock.releaseAll(reserved);
             String message = String.valueOf(ex.getMessage());
@@ -162,6 +170,33 @@ public class OrderService {
         } catch (RuntimeException ex) {
             stock.releaseAll(reserved);
             throw ex;
+        }
+        recordPromotionEvents(saved, coupon, phone, couponDiscount);
+        notifyOwnerSafely(saved);
+        return saved;
+    }
+
+    private void recordPromotionEvents(Order order, PromotionService.CouponValidationResult coupon,
+                                       String phone, int couponDiscount) {
+        if (coupon != null) {
+            try {
+                promotions.recordCouponUsage(coupon.coupon().getCode(), phone,
+                        order.getOrderNumber(), couponDiscount);
+                promotions.track(new CampaignAnalyticsRequest(null, null, "coupon_applied",
+                        null, coupon.coupon().getCode(), order.getOrderNumber(),
+                        (double) couponDiscount, "/checkout"));
+            } catch (RuntimeException ex) {
+                log.error("Order {} was placed but coupon usage could not be recorded",
+                        order.getOrderNumber(), ex);
+            }
+        }
+        try {
+            promotions.track(new CampaignAnalyticsRequest(null, null, "order_completed",
+                    null, order.getCouponCode(), order.getOrderNumber(),
+                    (double) order.getTotal(), "/checkout"));
+        } catch (RuntimeException ex) {
+            log.error("Order {} was placed but campaign analytics could not be recorded",
+                    order.getOrderNumber(), ex);
         }
     }
 
@@ -183,18 +218,25 @@ public class OrderService {
     }
 
     private Order buildOrder(CreateOrderRequest request, CartQuote quote, String phone,
-                             String trxId, String senderNumber, String key) {
+                             String trxId, String senderNumber, String key,
+                             String couponCode, int couponDiscount, String customerId) {
         Instant now = Instant.now();
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
+        order.setCustomerId(customerId);
         order.setCustomerName(request.customerName().trim());
         order.setPhone(phone);
         order.setArea(request.area());
         order.setAddress(request.address().trim());
         order.setNote(isBlank(request.note()) ? null : request.note().trim());
         order.setSubtotal(quote.subtotal());
+        int promotionalSavings = quote.items().stream()
+                .mapToInt(line -> line.discountAmount() * line.quantity()).sum();
+        order.setPromotionalDiscount(promotionalSavings > 0 ? promotionalSavings : null);
+        order.setCouponCode(couponCode);
+        order.setCouponDiscount(couponDiscount > 0 ? couponDiscount : null);
         order.setDeliveryCharge(quote.deliveryCharge());
-        order.setTotal(quote.total());
+        order.setTotal(Math.max(0, quote.total() - couponDiscount));
         order.setPaymentMethod(request.paymentMethod());
         boolean wallet = PaymentMethod.isMobileWallet(request.paymentMethod());
         order.setPaymentStatus(wallet ? PaymentStatus.VERIFICATION_PENDING : PaymentStatus.PENDING_COLLECTION);
@@ -221,6 +263,8 @@ public class OrderService {
             item.setVariantName(line.variantName());
             item.setUnitPrice(line.unitPrice());
             item.setOriginalPrice(line.originalPrice());
+            item.setDiscountAmount(line.discountAmount());
+            item.setAppliedDiscountId(line.appliedDiscountId());
             item.setQuantity(line.quantity());
             item.setLineTotal(line.lineTotal());
             item.setImage(line.image());
@@ -238,6 +282,21 @@ public class OrderService {
         placed.setNote("Order placed by customer via guest checkout (" + request.paymentMethod() + ").");
         order.setHistory(new ArrayList<>(List.of(placed)));
         return order;
+    }
+
+    private PromotionService.CouponValidationResult validateCoupon(
+            String code, String phone, CartQuote quote) {
+        PromotionService.CouponValidationResult result = promotions.validateCoupon(
+                new CouponValidationRequest(code, phone, quote.items().stream()
+                        .filter(CartLine::isOk)
+                        .map(line -> new CouponValidationRequest.CartLine(
+                                line.productId(), line.categoryId(), line.lineTotal()))
+                        .toList()));
+        if (!result.valid()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, result.error(),
+                    Map.of("code", "COUPON_INVALID"));
+        }
+        return result;
     }
 
     /** Retries with a fresh number if an order number collides (e.g. with legacy numbering). */

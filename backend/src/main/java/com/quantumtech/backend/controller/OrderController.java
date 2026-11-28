@@ -5,13 +5,18 @@ import com.quantumtech.backend.dto.OrderPublicResponse;
 import com.quantumtech.backend.dto.OrderStatusRequest;
 import com.quantumtech.backend.dto.PaymentStatusRequest;
 import com.quantumtech.backend.model.Order;
+import com.quantumtech.backend.service.AdminCustomerService;
+import com.quantumtech.backend.service.CustomerAccountService;
 import com.quantumtech.backend.service.OrderService;
 import com.quantumtech.backend.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,18 +25,28 @@ import java.util.Map;
 public class OrderController {
     private final OrderService orders;
     private final PaymentService payments;
+    private final CustomerAccountService customerAccounts;
+    private final AdminCustomerService adminCustomers;
 
-    public OrderController(OrderService orders, PaymentService payments) {
+    public OrderController(OrderService orders, PaymentService payments,
+                           CustomerAccountService customerAccounts, AdminCustomerService adminCustomers) {
         this.orders = orders;
         this.payments = payments;
+        this.customerAccounts = customerAccounts;
+        this.adminCustomers = adminCustomers;
     }
 
     /** Guest checkout. Returns the order confirmation (201). Repeating the same idempotency key returns the same order. */
     @PostMapping("/orders")
     @ResponseStatus(HttpStatus.CREATED)
     public OrderPublicResponse create(@Valid @RequestBody CreateOrderRequest request,
-                                      @RequestHeader(value = "X-Idempotency-Key", required = false) String key) {
-        return OrderPublicResponse.from(orders.create(request, key));
+                                      @RequestHeader(value = "X-Idempotency-Key", required = false) String key,
+                                      Authentication authentication) {
+        String customerId = authentication != null && authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_CUSTOMER"::equals)
+                ? customerAccounts.customerIdForEmail(authentication.getName()) : null;
+        return OrderPublicResponse.from(orders.create(request, key, customerId));
     }
 
     /** Public tracking by order number + checkout phone. Rate limited per client IP. */
@@ -69,6 +84,8 @@ public class OrderController {
 
     @GetMapping("/admin/dashboard")
     public Map<String, Object> dashboard() {
-        return orders.dashboard();
+        Map<String, Object> dashboard = new HashMap<>(orders.dashboard());
+        dashboard.put("totalCustomers", adminCustomers.countCustomers());
+        return dashboard;
     }
 }

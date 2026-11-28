@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public record CartLine(
         String productId,
+        String categoryId,
         String variantId,
         String productName,
         String productNameBn,
@@ -21,6 +22,9 @@ public record CartLine(
         String image,
         int unitPrice,
         Integer originalPrice,
+        int discountAmount,
+        String appliedDiscountId,
+        String badgeText,
         int quantity,
         int availableStock,
         int lineTotal,

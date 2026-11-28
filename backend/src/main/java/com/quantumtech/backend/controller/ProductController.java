@@ -22,6 +22,11 @@ public class ProductController {
         return search == null ? products.publicProducts() : products.search(search);
     }
 
+    @GetMapping("/products/has-admin-products")
+    public boolean hasAdminProducts() {
+        return products.hasAdminProducts();
+    }
+
     @GetMapping("/products/{id}")
     public Product get(@PathVariable String id) {
         return products.getPublicByIdOrSlug(id);

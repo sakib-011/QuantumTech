@@ -227,7 +227,8 @@ class CheckoutFlowIT extends EmbeddedMongoIntegrationTest {
         track(orderNumber.toLowerCase(), "+8801712345678")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderNumber").value(orderNumber))
-                .andExpect(jsonPath("$.timeline", hasSize(1)));
+                .andExpect(jsonPath("$.timeline", hasSize(1)))
+                .andExpect(jsonPath("$.history[0].toStatus").value("Pending"));
 
         admin("PATCH", "/api/admin/orders/" + id + "/status", "{\"status\":\"Confirmed\"}").andExpect(status().isOk());
         admin("PATCH", "/api/admin/orders/" + id + "/status", "{\"status\":\"Shipped\",\"note\":\"Pathao\"}")
@@ -239,6 +240,7 @@ class CheckoutFlowIT extends EmbeddedMongoIntegrationTest {
         track(orderNumber, "01712345678")
                 .andExpect(jsonPath("$.status").value("Delivered"))
                 .andExpect(jsonPath("$.steps[*].completed", everyItem(is(true))))
+                .andExpect(jsonPath("$.history[*].toStatus", contains("Pending", "Confirmed", "Shipped", "Delivered")))
                 .andExpect(jsonPath("$.timeline[*].status", contains("Pending", "Confirmed", "Shipped", "Delivered")));
 
         admin("PATCH", "/api/admin/orders/" + id + "/status", "{\"status\":\"Cancelled\",\"reason\":\"x\"}")

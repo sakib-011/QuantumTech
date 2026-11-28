@@ -17,6 +17,10 @@ public class ImageService {
     }
 
     public String upload(MultipartFile file) {
+        return upload(file, "quantumtech/products");
+    }
+
+    public String upload(MultipartFile file, String folder) {
         if (file.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Image file is required");
         }
@@ -31,7 +35,7 @@ public class ImageService {
         }
         try {
             Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(),
-                    Map.of("folder", "quantumtech/products", "resource_type", "image"));
+                    Map.of("folder", folder, "resource_type", "image"));
             return String.valueOf(result.get("secure_url"));
         } catch (Exception ex) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,

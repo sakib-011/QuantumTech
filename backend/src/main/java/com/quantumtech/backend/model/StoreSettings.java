@@ -28,9 +28,29 @@ public class StoreSettings {
     private String messengerUrl;
     private String address;
     private String businessHours;
+    private String heroBadgeText;
+    private String heroBadgeTextBn;
+    private String heroTitleLine1;
+    private String heroTitleLine1Bn;
+    private String heroTitleLine2;
+    private String heroTitleLine2Bn;
+    private String heroSubtitle;
+    private String heroSubtitleBn;
+    private String heroBannerImage;
+    private String heroBannerBadge;
+    private String heroBannerBadgeBn;
+    private String heroBannerTagline;
+    private String heroBannerTaglineBn;
+    private String heroPrimaryCtaText;
+    private String heroPrimaryCtaTextBn;
+    private String heroPrimaryCtaLink;
+    private String heroSecondaryCtaText;
+    private String heroSecondaryCtaTextBn;
+    private String heroSecondaryCtaLink;
+    private String heroRatingScore;
+    private String heroRatingText;
+    private String heroRatingTextBn;
 
-    // Lombok's getBKashNumber() makes Jackson use "bkashNumber" and silently drop "bKashNumber"
-    // sent by the admin form. Serialize as "bKashNumber" and still accept the old spelling.
     @JsonProperty("bKashNumber")
     public String getBKashNumber() {
         return bKashNumber;

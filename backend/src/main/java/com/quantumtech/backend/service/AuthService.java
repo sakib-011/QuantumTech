@@ -2,6 +2,7 @@ package com.quantumtech.backend.service;
 
 import com.quantumtech.backend.dto.LoginRequest;
 import com.quantumtech.backend.dto.LoginResponse;
+import com.quantumtech.backend.dto.UpdateAdminProfileRequest;
 import com.quantumtech.backend.exception.ApiException;
 import com.quantumtech.backend.model.AdminUser;
 import com.quantumtech.backend.repository.AdminUserRepository;
@@ -55,7 +56,22 @@ public class AuthService {
         user.setLockedUntil(null);
         user.setLastLoginAt(Instant.now());
         users.save(user);
-        return LoginResponse.of(jwtService.generateToken(user.getEmail()), user);
+        return LoginResponse.of(jwtService.generateToken(user.getEmail(), "ADMIN"), user);
+    }
+
+    public LoginResponse updateProfile(String currentEmail, UpdateAdminProfileRequest request) {
+        AdminUser user = users.findByEmailIgnoreCase(currentEmail)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Administrator not found"));
+        String updatedEmail = request.email().trim().toLowerCase();
+        users.findByEmailIgnoreCase(updatedEmail)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new ApiException(HttpStatus.CONFLICT, "That administrator email is already in use");
+                });
+        user.setName(request.name().trim());
+        user.setEmail(updatedEmail);
+        AdminUser saved = users.save(user);
+        return LoginResponse.of(jwtService.generateToken(saved.getEmail(), "ADMIN"), saved);
     }
 
     public void forgotPassword(String email) {

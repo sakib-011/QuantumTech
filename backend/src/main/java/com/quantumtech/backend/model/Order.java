@@ -13,6 +13,7 @@ import java.util.List;
 public class Order {
     @Id private String id;
     private String orderNumber;
+    private String customerId;
     private String customerName;
     private String phone;
     private String area;

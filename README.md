@@ -25,7 +25,7 @@ QuantumTech is a modern, high-performance, responsive e-commerce web application
   - [Production Build](#production-build)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Design System & UI Guidelines](#design-system--ui-guidelines)
-- [Default Admin Credentials](#default-admin-credentials)
+- [Admin Login](#admin-login)
 - [License](#license)
 
 ---
@@ -43,6 +43,7 @@ QuantumTech is a modern, high-performance, responsive e-commerce web application
 - **Dynamic Pricing & Countdown Timers**: Displays active prices, previous strike-through prices, promotional percentage discounts, calculated savings, and real-time flash deal countdown clocks.
 - **Variants Support**: Color, model, and size variant selectors with individual variant stock allocation.
 - **Storefront Availability Protection**: Add to Cart button automatically disables if a selected variant is out of stock.
+- **Empty Catalog Preview**: Sample seed products appear only when no non-deleted admin products exist. They are labeled as previews and cannot be ordered; adding a real product hides the sample catalog.
 - **Direct Engagement Actions**: Integrated WhatsApp inquiry, Messenger chat, Facebook sharing, and quick link copy.
 
 ### Bilingual Localization (EN / BN)
@@ -120,87 +121,17 @@ QuantumTech implements a robust stock calculation model across the entire applic
 
 ```text
 QuantumTech/
-├── dist/                          # Production build output
-├── public/                        # Static assets (favicons, banners)
-├── scripts/                       # End-to-end automated test suites
-│   ├── audit-full-system.mjs      # Viewport & route audit
-│   ├── test-admin.mjs             # Admin dashboard & product CRUD test
-│   ├── test-admin-orders-reviews.mjs # Order transitions & review moderation test
-│   ├── test-complete-journeys.mjs # Full customer purchase journeys
-│   ├── test-interactions.mjs      # Cart, checkout, and tracking tests
-│   ├── test-language-system.mjs   # English/Bangla localization test
-│   ├── test-promotions-system.mjs # Popups, campaigns, and discounts test
-│   ├── test-review-system.mjs     # Review submission & verification test
-│   └── test-stock-sync.mjs        # Product variant stock synchronization test
-├── src/
-│   ├── components/                # Reusable UI components
-│   │   ├── Breadcrumb.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── Navbar.tsx
-│   │   ├── Pagination.tsx
-│   │   ├── PriceDisplay.tsx
-│   │   ├── ProductCard.tsx
-│   │   ├── PromotionalPopup.tsx
-│   │   └── QuantitySelector.tsx
-│   ├── context/                   # React Context state providers
-│   │   ├── AuthContext.tsx
-│   │   ├── CartContext.tsx
-│   │   ├── LanguageContext.tsx
-│   │   └── ToastContext.tsx
-│   ├── data/                      # Initial seed and mock data
-│   │   └── mockData.ts
-│   ├── pages/                     # Storefront & Admin page views
-│   │   ├── AboutPage.tsx
-│   │   ├── CampaignLandingPage.tsx
-│   │   ├── CartPage.tsx
-│   │   ├── CheckoutPage.tsx
-│   │   ├── ContactPage.tsx
-│   │   ├── HomePage.tsx
-│   │   ├── NotFoundPage.tsx
-│   │   ├── OrderConfirmationPage.tsx
-│   │   ├── PoliciesPage.tsx
-│   │   ├── ProductDetailPage.tsx
-│   │   ├── ShopPage.tsx
-│   │   ├── TrackOrderPage.tsx
-│   │   └── admin/                 # Admin management views
-│   │       ├── AdminAnalyticsPage.tsx
-│   │       ├── AdminCampaignsPage.tsx
-│   │       ├── AdminCategoriesPage.tsx
-│   │       ├── AdminCouponsPage.tsx
-│   │       ├── AdminDashboardPage.tsx
-│   │       ├── AdminDiscountsPage.tsx
-│   │       ├── AdminLoginPage.tsx
-│   │       ├── AdminOrderDetailPage.tsx
-│   │       ├── AdminOrdersPage.tsx
-│   │       ├── AdminPopupsPage.tsx
-│   │       ├── AdminProductFormPage.tsx
-│   │       ├── AdminProductsPage.tsx
-│   │       ├── AdminReviewsPage.tsx
-│   │       └── AdminSettingsPage.tsx
-│   ├── services/                  # Business logic & data services
-│   │   ├── authService.ts
-│   │   ├── cartService.ts
-│   │   ├── categoryService.ts
-│   │   ├── orderService.ts
-│   │   ├── productService.ts
-│   │   ├── promotionService.ts
-│   │   ├── reviewService.ts
-│   │   └── settingsService.ts
-│   ├── types/                     # TypeScript data interfaces
-│   │   └── index.ts
-│   ├── utilities/                 # Helpers, formatting, and icons
-│   │   ├── currency.ts
-│   │   ├── icons.ts
-│   │   ├── storage.ts
-│   │   └── translations.ts
-│   ├── App.tsx                    # Root routing & layout provider
-│   ├── index.css                  # Tailwind styles and custom typography
-│   └── main.tsx                   # React DOM entry point
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── vite.config.ts
+├── backend/                       # Backend application
+├── frontend/
+│   ├── src/                       # React application
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   ├── tsconfig*.json
+│   └── vite.config.ts
+└── README.md
 ```
 
 ---
@@ -216,14 +147,46 @@ QuantumTech/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/sakib-011/QuantumTech_personal.git
-   cd QuantumTech_personal
+   git clone https://github.com/pointfex-hq/QuantumTech.git
+   cd QuantumTech/frontend
    ```
 
 2. Install dependencies:
    ```bash
    npm install
    ```
+
+Vite reads `VITE_API_URL` from the repository-root `.env` file.
+
+For deployments with the frontend and backend on separate providers, set `VITE_API_URL` in the
+frontend provider's build environment to the public backend API origin, then rebuild the frontend.
+On the backend provider, configure the variables listed in `backend/.env.example`; set
+`CORS_ALLOWED_ORIGINS` to the exact deployed frontend origin. Keep database, JWT, admin,
+Cloudinary, and mail secrets server-side only (never use a `VITE_` prefix for secrets). Local
+backend values belong in the ignored `backend/.env`.
+
+### Deploy frontend and Spring Boot backend together on Vercel
+
+The root `vercel.json` configures the Vite frontend and the Spring Boot backend as Vercel
+Services. The backend uses Vercel's beta Container runtime and is built from
+[`backend/Dockerfile`](backend/Dockerfile). Requests under `/api/` are routed to Spring Boot;
+all other paths go to the frontend.
+
+1. Import the repository into Vercel and keep the project root set to the repository root.
+2. In Vercel project environment variables, remove any `VITE_API_URL` override. The frontend
+   then uses same-origin `/api/...` requests, which the Vercel rewrite sends to the backend.
+3. Set `PORT=8080` for the backend container so Vercel's port routing matches Spring Boot's
+   configured `server.port`.
+4. Configure the required backend variables from `backend/.env.example` in Vercel. At minimum,
+   provide `MONGODB_URI`, `MONGODB_DATABASE`, `JWT_SECRET` (at least 32 characters),
+   `ADMIN_EMAIL`, and `ADMIN_PASSWORD`. Set `RESET_BASE_URL` to the deployed frontend's
+   `/reset-password` URL and `CORS_ALLOWED_ORIGINS` to the deployed frontend origin(s).
+   Add Cloudinary and SMTP variables if those features are enabled.
+5. Ensure the MongoDB deployment accepts connections from the Vercel runtime, then deploy.
+
+Do not commit `.env` files or put backend secrets in `VITE_` variables. Vercel Services and the
+Container runtime are currently beta features; confirm their availability and limits for the
+Vercel project before relying on them for production.
 
 ### Development Server
 
@@ -288,12 +251,10 @@ QuantumTech strictly adheres to high-conversion modern e-commerce UX guidelines:
 
 ---
 
-## Admin authentication
+## Admin Login
 
-Admin sign-in is validated by the backend. Configure `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and
-`JWT_SECRET` in the backend environment before starting the service; see
-[`backend/.env.example`](backend/.env.example). No demo administrator password is included.
-Set `ADMIN_PASSWORD` locally before running browser QA scripts in `scripts/`.
+Admin credentials are configured through the backend environment or the ignored local
+profile at `backend/src/main/resources/application-local.properties`. Do not commit credentials.
 
 ---
 

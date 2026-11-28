@@ -7,6 +7,7 @@ import com.quantumtech.backend.exception.ApiException;
 import com.quantumtech.backend.model.Order;
 import com.quantumtech.backend.model.Product;
 import com.quantumtech.backend.model.StoreSettings;
+import com.quantumtech.backend.model.Coupon;
 import com.quantumtech.backend.repository.OrderRepository;
 import com.quantumtech.backend.repository.ProductRepository;
 import com.quantumtech.backend.repository.SettingsRepository;
@@ -28,6 +29,7 @@ import static com.quantumtech.backend.service.CheckoutFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 class OrderServiceTest {
@@ -38,6 +40,7 @@ class OrderServiceTest {
     private final OrderNumberGenerator numbers = mock(OrderNumberGenerator.class);
     private final NotificationService notifications = mock(NotificationService.class);
     private final MongoTemplate mongo = mock(MongoTemplate.class);
+    private final PromotionService promotions = mock(PromotionService.class);
     private final Map<String, Product> catalog = new HashMap<>();
     private OrderService service;
 
@@ -56,9 +59,28 @@ class OrderServiceTest {
         when(numbers.next()).thenReturn("QT-261123-0001", "QT-261123-0002", "QT-261123-0003");
         when(orders.insert(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(mongo.findAndReplace(any(Query.class), any(Order.class))).thenAnswer(inv -> inv.getArgument(1));
-        service = new OrderService(orders, products, new CartService(products, settings), stock, numbers,
+        when(promotions.calculateProductPrice(any(Product.class), nullable(String.class))).thenAnswer(inv -> {
+            Product product = inv.getArgument(0);
+            String variantId = inv.getArgument(1);
+            double basePrice = product.getPrice();
+            if (variantId != null && product.getVariants() != null) {
+                basePrice = product.getVariants().stream().filter(v -> variantId.equals(v.getId()))
+                        .mapToDouble(v -> v.getPrice() > 0 ? v.getPrice() : product.getPrice())
+                        .findFirst().orElse(basePrice);
+            }
+            if (product.getOldPrice() != null && product.getOldPrice() > basePrice) {
+                return new PromotionService.PriceResult(product.getOldPrice(), basePrice,
+                        product.getOldPrice() - basePrice, null, null, null, null);
+            }
+            return new PromotionService.PriceResult(basePrice, basePrice, 0,
+                    null, null, null, null);
+        });
+        when(promotions.validateCoupon(any())).thenReturn(
+                new PromotionService.CouponValidationResult(false, 0, "Invalid coupon", null));
+        CartService cart = new CartService(products, settings, promotions);
+        service = new OrderService(orders, products, cart, stock, numbers,
                 new PaymentMethodCatalog(settings), new LookupRateLimiter(10, Duration.ofMinutes(15), Clock.systemUTC()),
-                notifications, mongo);
+                notifications, mongo, promotions);
         catalog.put("p1", product("p1", 500, 10));
         catalog.put("p2", product("p2", 1200, 3));
     }
@@ -148,12 +170,32 @@ class OrderServiceTest {
         }
 
         @Test
-        void rejectsCouponCodes() {
+        void rejectsInvalidCouponCodes() {
             CreateOrderRequest base = cod(List.of(item("p1", 1)));
             CreateOrderRequest withCoupon = new CreateOrderRequest(base.customerName(), base.phone(), base.area(),
                     base.address(), null, null, null, null, "COD", null, null, "FREE100", 100, null, null, base.items());
             ApiException ex = assertApiError(HttpStatus.BAD_REQUEST, () -> service.create(withCoupon, null));
             assertEquals("COUPON_INVALID", ex.getDetails().get("code"));
+        }
+
+        @Test
+        void appliesServerValidatedCouponAndRecordsRedemption() {
+            Coupon coupon = new Coupon();
+            coupon.setCode("SAVE50");
+            when(promotions.validateCoupon(any())).thenReturn(
+                    new PromotionService.CouponValidationResult(true, 50, null, coupon));
+            CreateOrderRequest base = cod(List.of(item("p1", 1)));
+            CreateOrderRequest withCoupon = new CreateOrderRequest(base.customerName(), base.phone(), base.area(),
+                    base.address(), null, null, null, null, "COD", null, null, "SAVE50", 0,
+                    null, null, base.items());
+
+            Order order = service.create(withCoupon, null);
+
+            assertEquals(520, order.getTotal());
+            assertEquals("SAVE50", order.getCouponCode());
+            assertEquals(50, order.getCouponDiscount());
+            verify(promotions).recordCouponUsage("SAVE50", "01712345678",
+                    "QT-261123-0001", 50);
         }
 
         @Test
@@ -169,6 +211,18 @@ class OrderServiceTest {
         void acceptsMatchingClientTotal() {
             CreateOrderRequest fresh = request("COD", null, null, 1070, List.of(item("p1", 2)));
             assertEquals(1070, service.create(fresh, null).getTotal());
+        }
+
+        @Test
+        void recalculatesProductPromotionForCartAndStoredOrder() {
+            catalog.get("p1").setOldPrice(650);
+
+            Order order = service.create(cod(List.of(item("p1", 2))), null);
+
+            assertEquals(1000, order.getSubtotal());
+            assertEquals(300, order.getPromotionalDiscount());
+            assertEquals(150, order.getItems().get(0).getDiscountAmount());
+            assertEquals(650, order.getItems().get(0).getOriginalPrice());
         }
 
         @Test

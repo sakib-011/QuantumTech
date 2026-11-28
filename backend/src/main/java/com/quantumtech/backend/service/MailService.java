@@ -3,10 +3,14 @@ package com.quantumtech.backend.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MailService {
+    private static final Logger log = LoggerFactory.getLogger(MailService.class);
+
     private final JavaMailSender mailSender;
     private final String resetBaseUrl;
     private final String from;
@@ -23,12 +27,27 @@ public class MailService {
         SimpleMailMessage message = new SimpleMailMessage();
         if (!from.isBlank()) message.setFrom(from);
         message.setTo(recipient);
-        message.setSubject("QuantumTech admin password reset");
-        message.setText(resetBaseUrl + "?token=" + token);
+        message.setSubject("QuantumTech password reset");
+        message.setText("Reset your QuantumTech account password using this link:\n\n"
+                + resetBaseUrl + "?token=" + token);
         try {
             mailSender.send(message);
         } catch (Exception ex) {
-            // The reset token remains valid; the API must not reveal whether an account exists.
+            log.error("Failed to send password reset email", ex);
+        }
+    }
+
+    public void sendResetOtp(String recipient, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        if (!from.isBlank()) message.setFrom(from);
+        message.setTo(recipient);
+        message.setSubject("QuantumTech password reset code");
+        message.setText("Your QuantumTech password reset code is " + otp
+                + ". It expires in 10 minutes. If you did not request this, ignore this email.");
+        try {
+            mailSender.send(message);
+        } catch (Exception ex) {
+            log.error("Failed to send password reset OTP email", ex);
         }
     }
 

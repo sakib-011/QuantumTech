@@ -37,9 +37,10 @@ class PaymentServiceTest {
         when(mongo.findAndReplace(any(Query.class), any(Order.class))).thenAnswer(inv -> inv.getArgument(1));
         ProductRepository products = mock(ProductRepository.class);
         LookupRateLimiter limiter = new LookupRateLimiter(10, Duration.ofMinutes(15), Clock.systemUTC());
-        OrderService orderService = new OrderService(orders, products, new CartService(products, settings),
+        PromotionService promotions = mock(PromotionService.class);
+        OrderService orderService = new OrderService(orders, products, new CartService(products, settings, promotions),
                 mock(StockService.class), mock(OrderNumberGenerator.class), new PaymentMethodCatalog(settings),
-                limiter, mock(NotificationService.class), mongo);
+                limiter, mock(NotificationService.class), mongo, promotions);
         payments = new PaymentService(orderService, limiter);
     }
 
@@ -119,6 +120,8 @@ class PaymentServiceTest {
         assertEquals("01898765432", updated.getSenderNumber());
         assertEquals("Verification pending", updated.getPaymentStatus());
         assertEquals("Customer", updated.getHistory().get(0).getChangedBy());
+        assertTrue(updated.getHistory().get(0).getNote().contains("Customer resubmitted"));
+        assertTrue(updated.getHistory().get(0).getNote().contains("NEWTRX5678"));
     }
 
     @Test

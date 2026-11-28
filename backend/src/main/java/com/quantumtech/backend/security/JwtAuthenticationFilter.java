@@ -28,12 +28,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            if (jwtService.isValid(token)) {
-                String email = jwtService.extractEmail(token);
-                var auth = new UsernamePasswordAuthenticationToken(
-                        email, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (!jwtService.isValid(token)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                return;
             }
+            String email = jwtService.extractEmail(token);
+            String role = jwtService.extractRole(token);
+            if (!"ADMIN".equals(role) && !"CUSTOMER".equals(role)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token role");
+                return;
+            }
+            var auth = new UsernamePasswordAuthenticationToken(
+                    email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
         filterChain.doFilter(request, response);
     }

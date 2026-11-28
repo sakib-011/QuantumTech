@@ -16,13 +16,15 @@ import java.util.*;
 import static com.quantumtech.backend.service.CheckoutFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 class CartServiceTest {
     private final ProductRepository products = mock(ProductRepository.class);
     private final SettingsRepository settings = mock(SettingsRepository.class);
+    private final PromotionService promotions = mock(PromotionService.class);
     private final Map<String, Product> catalog = new HashMap<>();
-    private final CartService cart = new CartService(products, settings);
+    private final CartService cart = new CartService(products, settings, promotions);
 
     @BeforeEach
     void setUp() {
@@ -33,6 +35,22 @@ class CartServiceTest {
                 if (catalog.containsKey(id)) found.add(catalog.get(id));
             }
             return found;
+        });
+        when(promotions.calculateProductPrice(any(Product.class), nullable(String.class))).thenAnswer(inv -> {
+            Product product = inv.getArgument(0);
+            String variantId = inv.getArgument(1);
+            double basePrice = product.getPrice();
+            if (variantId != null && product.getVariants() != null) {
+                basePrice = product.getVariants().stream().filter(v -> variantId.equals(v.getId()))
+                        .mapToDouble(v -> v.getPrice() > 0 ? v.getPrice() : product.getPrice())
+                        .findFirst().orElse(basePrice);
+            }
+            if (product.getOldPrice() != null && product.getOldPrice() > basePrice) {
+                return new PromotionService.PriceResult(product.getOldPrice(), basePrice,
+                        product.getOldPrice() - basePrice, null, null, null, null);
+            }
+            return new PromotionService.PriceResult(basePrice, basePrice, 0,
+                    null, null, null, null);
         });
         catalog.put("p1", product("p1", 500, 10));
     }

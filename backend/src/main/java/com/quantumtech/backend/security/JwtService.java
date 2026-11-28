@@ -22,9 +22,14 @@ public class JwtService {
     }
 
     public String generateToken(String email) {
+        return generateToken(email, "ADMIN");
+    }
+
+    public String generateToken(String email, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(email)
+                .claim("role", role)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expirationMs)))
                 .signWith(key)
@@ -34,6 +39,12 @@ public class JwtService {
     public String extractEmail(String token) {
         return Jwts.parser().verifyWith(key).build()
                 .parseSignedClaims(token).getPayload().getSubject();
+    }
+
+    public String extractRole(String token) {
+        String role = Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload().get("role", String.class);
+        return role == null ? "ADMIN" : role;
     }
 
     public boolean isValid(String token) {

@@ -61,4 +61,50 @@ class ProductServiceTest {
         ProductService service = new ProductService(repository);
         assertEquals(1, service.publicProducts().size());
     }
+
+    @Test
+    void hidesLegacySeedProductsAndDetectsRealAdminProducts() {
+        ProductRepository repository = mock(ProductRepository.class);
+        Product seed = new Product();
+        seed.setId("prod-01");
+        seed.setSlug("q-charge-20w-fast-charger");
+        Product real = new Product();
+        real.setId("admin-product");
+        real.setSlug("admin-product");
+        when(repository.findAll()).thenReturn(List.of(seed, real));
+
+        ProductService service = new ProductService(repository);
+
+        assertEquals(List.of(real), service.publicProducts());
+        assertEquals(List.of(real), service.adminProducts());
+        assertTrue(service.hasAdminProducts());
+    }
+
+    @Test
+    void legacySeedsAloneDoNotCountAsAdminProducts() {
+        ProductRepository repository = mock(ProductRepository.class);
+        Product seed = new Product();
+        seed.setId("prod-01");
+        seed.setSlug("q-charge-20w-fast-charger");
+        when(repository.findAll()).thenReturn(List.of(seed));
+
+        ProductService service = new ProductService(repository);
+
+        assertFalse(service.hasAdminProducts());
+        assertTrue(service.publicProducts().isEmpty());
+    }
+
+    @Test
+    void hiddenAdminProductsStillSuppressTheSeedCatalog() {
+        ProductRepository repository = mock(ProductRepository.class);
+        Product hidden = new Product();
+        hidden.setId("admin-product");
+        hidden.setStatus("Hidden");
+        when(repository.findAll()).thenReturn(List.of(hidden));
+
+        ProductService service = new ProductService(repository);
+
+        assertTrue(service.hasAdminProducts());
+        assertTrue(service.publicProducts().isEmpty());
+    }
 }

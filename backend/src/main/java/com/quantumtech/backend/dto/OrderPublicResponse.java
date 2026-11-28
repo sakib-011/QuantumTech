@@ -27,6 +27,8 @@ public record OrderPublicResponse(
         String note,
         List<Item> items,
         int subtotal,
+        Integer promotionalDiscount,
+        String couponCode,
         Integer couponDiscount,
         int deliveryCharge,
         int total,
@@ -37,16 +39,20 @@ public record OrderPublicResponse(
         boolean paymentActionRequired,
         String status,
         String cancellationReason,
+        List<HistoryEntry> history,
         List<Step> steps,
         List<TimelineEntry> timeline,
         Instant createdAt,
         Instant updatedAt
 ) {
-    public record Item(String productId, String variantId, String productName, String variantName,
-                       String image, int unitPrice, int quantity, int lineTotal) {
+    public record Item(String id, String orderId, String productId, String variantId,
+                       String productName, String variantName, String image, int unitPrice,
+                       Integer originalPrice, Integer discountAmount, String appliedDiscountId,
+                       int quantity, int lineTotal) {
         static Item from(OrderItem item) {
-            return new Item(item.getProductId(), item.getVariantId(), item.getProductName(),
-                    item.getVariantName(), item.getImage(), item.getUnitPrice(),
+            return new Item(item.getId(), item.getOrderId(), item.getProductId(), item.getVariantId(),
+                    item.getProductName(), item.getVariantName(), item.getImage(), item.getUnitPrice(),
+                    item.getOriginalPrice(), item.getDiscountAmount(), item.getAppliedDiscountId(),
                     item.getQuantity(), item.getLineTotal());
         }
     }
@@ -56,6 +62,15 @@ public record OrderPublicResponse(
 
     /** Status change visible to the customer (admin notes are intentionally omitted). */
     public record TimelineEntry(String status, Instant at) {}
+
+    /** History shape used by the storefront; administrator notes are never exposed. */
+    public record HistoryEntry(String id, String orderId, String fromStatus, String toStatus,
+                               String changedBy, Instant changedAt) {
+        static HistoryEntry from(OrderStatusLog log) {
+            return new HistoryEntry(log.getId(), log.getOrderId(), log.getFromStatus(),
+                    log.getToStatus(), log.getChangedBy(), log.getChangedAt());
+        }
+    }
 
     public static OrderPublicResponse from(Order order) {
         List<OrderStatusLog> history = Objects.requireNonNullElse(order.getHistory(), List.of());
@@ -87,9 +102,11 @@ public record OrderPublicResponse(
                 order.getArea(), order.getAddress(), order.getNote(),
                 Objects.requireNonNullElse(order.getItems(), List.<OrderItem>of())
                         .stream().map(Item::from).toList(),
-                order.getSubtotal(), order.getCouponDiscount(), order.getDeliveryCharge(), order.getTotal(),
+                order.getSubtotal(), order.getPromotionalDiscount(), order.getCouponCode(),
+                order.getCouponDiscount(), order.getDeliveryCharge(), order.getTotal(),
                 order.getPaymentMethod(), order.getPaymentStatus(), order.getTrxId(),
                 order.getSenderNumber(), actionRequired, status, order.getCancellationReason(),
+                history.stream().map(HistoryEntry::from).toList(),
                 steps, timeline, order.getCreatedAt(), order.getUpdatedAt());
     }
 }

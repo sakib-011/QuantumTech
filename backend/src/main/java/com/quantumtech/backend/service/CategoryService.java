@@ -10,10 +10,19 @@ import org.springframework.stereotype.Service;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class CategoryService {
+    private static final Map<String, String> LEGACY_SEED_SLUGS = Map.of(
+            "cat-chargers", "chargers-cables",
+            "cat-audio", "audio",
+            "cat-cases", "cases-protection",
+            "cat-gadgets", "smart-gadgets",
+            "cat-computer", "computer-accessories"
+    );
+
     private final CategoryRepository categories;
     private final ProductRepository products;
 
@@ -25,6 +34,7 @@ public class CategoryService {
     public List<Category> publicCategories() {
         List<Category> result = categories.findAll().stream()
                 .filter(c -> "Visible".equals(c.getStatus()))
+                .filter(this::isRealOrUsedSeedCategory)
                 .sorted(java.util.Comparator.comparingInt(Category::getSortOrder))
                 .toList();
         result.forEach(this::addCount);
@@ -33,6 +43,7 @@ public class CategoryService {
 
     public List<Category> adminCategories() {
         List<Category> result = categories.findAll().stream()
+                .filter(this::isRealOrUsedSeedCategory)
                 .sorted(java.util.Comparator.comparingInt(Category::getSortOrder))
                 .toList();
         result.forEach(this::addCount);
@@ -80,8 +91,19 @@ public class CategoryService {
 
     private void addCount(Category category) {
         long count = products.findAll().stream()
-                .filter(p -> category.getId().equals(p.getCategoryId()) && !"Deleted".equals(p.getStatus()))
+                .filter(p -> category.getId().equals(p.getCategoryId())
+                        && !"Deleted".equals(p.getStatus())
+                        && !ProductService.isLegacySeedProduct(p))
                 .count();
         category.setProductCount((int) count);
+    }
+
+    private boolean isRealOrUsedSeedCategory(Category category) {
+        String expectedSlug = LEGACY_SEED_SLUGS.get(category.getId());
+        if (expectedSlug == null || !expectedSlug.equals(category.getSlug())) return true;
+        return products.findAll().stream().anyMatch(product ->
+                category.getId().equals(product.getCategoryId())
+                        && !"Deleted".equals(product.getStatus())
+                        && !ProductService.isLegacySeedProduct(product));
     }
 }
